@@ -1,0 +1,29 @@
+.clear-search {
+  background-color: #2d0a0a;
+  color: black;
+  font-family:Arial, Helvetica, sans-serif, Times, serif;
+  font-size: 55%;
+  border-radius: 5%;
+  padding: 1px;
+  margin: 2px;
+  width: 69px;
+  transition: background-color 0.3s ease, color 0.3s ease; 
+}
+
+.clear-search:hover {
+  background-color: aliceblue;
+  color:blueviolet
+}
+
+.clear-search:active {
+  color: red;
+  cursor: pointer
+}
+
+/* .clear-search:focus {
+  outline: none;
+} */
+
+.clear-search:focus-visible {
+  outline: auto;
+}

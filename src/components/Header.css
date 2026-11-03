@@ -1,0 +1,16 @@
+
+.header {
+  display: flex;
+  background-color: antiquewhite;
+  color: rgb(146, 27, 172);
+  align-items: end;
+  justify-content: space-between;
+  font-size: small;
+  margin-bottom: 10px;
+}
+
+.header-title {
+  color: rgb(218, 204, 255);
+  position: relative;
+  top: 7px
+}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export default function UserStatus() {
-  const [status, setStatus] = useState(false);
+  const [status, setStatus] = useState(true);
 
   function handleToggle() {
     setStatus(!status);

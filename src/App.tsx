@@ -2,8 +2,12 @@ import { FilmCard } from "./FilmCard.tsx"
 import { BookCard } from "./FilmCard.tsx";
 import UserStatus from "./UserStatus";
 import { useState } from "react";
+import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router";
 import "./App.css";
-import Header from "./components/Header.tsx"
+import Header from "./components/Header.tsx";
+import Navbar from "./components/Navbar.tsx";
+import Search from "./components/Search.tsx";
 
 
 export interface Movie {
@@ -14,7 +18,7 @@ export interface Movie {
 };
 
 function App() {
-  const [moviesArray, setMoviesArray] = useState([
+  const initialMovies: Movie[] = [
   {
     name: "Fargo",
     year: 1996,
@@ -33,7 +37,21 @@ function App() {
     summary: "A comedy about a small-time con artist",
     isWatched: false
   }
-  ]);
+  ];
+
+  const [moviesArray, setMoviesArray] = useState<Movie[]>(() => {
+    const savedMovies = localStorage.getItem("movies");
+
+    if (savedMovies) {
+      return JSON.parse(savedMovies);
+    } else {
+      return initialMovies;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("movies", JSON.stringify(moviesArray));
+  }, [moviesArray]);
 
   const [movieName, setMovieName] = useState("");
   const [movieYear, setMovieYear] = useState<number | "">("");
@@ -148,86 +166,159 @@ function App() {
       movie.summary.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()))
   });
 
+  const searchedWatchedMovies = moviesArray
+    .filter(filterWatched)
+    .filter((movie) => {
+      return (
+        movie.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase()) ||
+        movie.summary.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase())
+      );
+    });
+
+
   return (
-    <main>
-      <Header />
-      <label htmlFor= "search"> 
-        Search movies
-      </label>
-      <br />
-      <input
-      type = "text"
-      id= "search"
-      value = {searchTerm}
-      onChange = {(e) => setSearchTerm(e.target.value)}>       
-      </input>
-      <button className = "clear-search"
-        id="clearSearch"
-        onClick = {() => setSearchTerm("")}>
-        ✕ Clear Search
-        </button>
-      <br />
+    <>
+    <Navbar />
+    <Routes>
+      <Route path="/" element={<Navigate to="/all" replace />} />
+      <Route path="/all" element={
+      <main>
+        <Header />
+        <label htmlFor= "search"> 
+          Search movies
+        </label>
+        <br />
+        <input
+        type = "text"
+        id= "search"
+        value = {searchTerm}
+        onChange = {(e) => setSearchTerm(e.target.value)}>       
+        </input>
+        <button className = "clear-search"
+          id="clearSearch"
+          onClick = {() => setSearchTerm("")}>
+          ✕ Clear Search
+          </button>
+        <br />
 
-      <button onClick={() => setFilter("all")}>
-        All
-        </button>
-      
-      <button onClick={() => setFilter("Watched")}>
-        Watched
-        </button>
-      
-      <button onClick={() => setFilter("Unwatched")}>
-        Unwatched
-        </button>
+        <button onClick={() => setFilter("all")}>
+          All
+          </button>
+        
+        <button onClick={() => setFilter("Watched")}>
+          Watched
+          </button>
+        
+        <button onClick={() => setFilter("Unwatched")}>
+          Unwatched
+          </button>
 
-      {searchedMovies.length === 0 && <p>No movies found.</p>}
-        {searchedMovies.map((movie) => (
-          <FilmCard
-            movie ={movie}
-            onToggleWatched={toggleWatched}
-            deleteMovie={deleteMovie}
-            editMovie={editMovie}
-          />
-        ))}
-    {/* <FilmCard name= 'Fargo' year={1996} summary='An artwork of suspense' isWatched={true}/>
-    <FilmCard name= 'The Menu' year= {2022} summary="It's not about food" isWatched={true}/> */}
-    <br />
-    <input 
-      placeholder = "Movie name"
-      value = {movieName}
-      onChange={(e) => setMovieName(e.target.value)}>
+        {searchedMovies.length === 0 && <p>No movies found.</p>}
+          {searchedMovies.map((movie) => (
+            <FilmCard
+              movie ={movie}
+              onToggleWatched={toggleWatched}
+              deleteMovie={deleteMovie}
+              editMovie={editMovie}
+            />
+          ))}
+      <br />
+      <input 
+        placeholder = "Movie name"
+        value = {movieName}
+        onChange={(e) => setMovieName(e.target.value)}>
+        </input>
+      <input 
+        placeholder = "Movie Year"
+        value = {movieYear}
+        onChange={(e) => setMovieYear(Number(e.target.value))}>
       </input>
-    <input 
-      placeholder = "Movie Year"
-      value = {movieYear}
-      onChange={(e) => setMovieYear(Number(e.target.value))}>
-    </input>
-    <input 
-      placeholder = "Movie Summary"
-      value = {movieSummary}
-      onChange={(e) => setMovieSummary(e.target.value)}>
-    </input>
-    <label htmlFor="checkbox"> İzleme durumu:</label>
-    <input type="checkbox" 
-      id="checkbox"
-        checked = {checkboxChecked}
-        onChange = {(e) => setCheckboxChecked(e.target.checked)}
-    />
-    {editingMovie !== null && (
-    <button onClick={saveMovie}>
-      Save
-    </button>
-  )}
-    {showEditWarning && (
-    <p>You are editing a film. Save it before adding a new one.</p>
-  )}
-    <button onClick={addNewMovie}>
-        Add a movie
+      <input 
+        placeholder = "Movie Summary"
+        value = {movieSummary}
+        onChange={(e) => setMovieSummary(e.target.value)}>
+      </input>
+      <label htmlFor="checkbox"> İzleme durumu:</label>
+      <input type="checkbox" 
+        id="checkbox"
+          checked = {checkboxChecked}
+          onChange = {(e) => setCheckboxChecked(e.target.checked)}
+      />
+      {editingMovie !== null && (
+      <button onClick={saveMovie}>
+        Save
       </button>
-    <BookCard title= 'Crucial Conversations' author= 'Patterson Grenny' isRead={false}/>
-    <UserStatus />
-    </main>
-  );
+      )}
+      {showEditWarning && (
+      <p>You are editing a film. Save it before adding a new one.</p>
+      )}
+      <button onClick={addNewMovie}>
+          Add a movie
+        </button>
+      <BookCard title= 'Crucial Conversations' author= 'Patterson Grenny' isRead={false}/>
+      <UserStatus />
+      </main>
+      } />
+      <Route
+        path="/watched"
+        element={
+          <main>
+            <Search 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            />
+            {searchedWatchedMovies.length === 0 && <p>No movies found.</p>}
+            {searchedWatchedMovies.map((movie) => (
+              <FilmCard
+                movie={movie}
+                onToggleWatched={toggleWatched}
+                deleteMovie={deleteMovie}
+                editMovie={editMovie}
+              />
+            ))}
+          </main>
+        }
+      />
+      <Route 
+        path="/add"
+        element={
+          <main>
+            <input 
+              placeholder = "Movie name"
+              value = {movieName}
+              onChange={(e) => setMovieName(e.target.value)}>
+              </input>
+            <input 
+              placeholder = "Movie Year"
+              value = {movieYear}
+              onChange={(e) => setMovieYear(Number(e.target.value))}>
+              </input>
+            <input 
+              placeholder = "Movie Summary"
+              value = {movieSummary}
+              onChange={(e) => setMovieSummary(e.target.value)}>
+              </input>
+            <label htmlFor="checkbox"> İzleme durumu:</label>
+            <input type="checkbox" 
+              id="checkbox"
+                checked = {checkboxChecked}
+                onChange = {(e) => setCheckboxChecked(e.target.checked)}>
+              </input>
+            <button onClick={addNewMovie}>
+              Add a movie
+            </button>
+          </main>
+        }
+      />
+      <Route 
+      path="/settings"
+      element={
+        <UserStatus />
+      }
+      />
+    </Routes>
+  </>
+);
 
   function toggleWatched(movieName: string) {
   setMoviesArray(

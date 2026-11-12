@@ -18,11 +18,12 @@ export default function Search({ searchTerm, setSearchTerm }: SearchProps) {
         value = {searchTerm}
         onChange = {(e) => setSearchTerm(e.target.value)}>       
         </input>
+        {searchTerm && 
         <button className = "clear-search"
           id="clearSearch"
           onClick = {() => setSearchTerm("")}>
           ✕ Clear Search
-          </button>
+          </button>}
         </>
     )
 }

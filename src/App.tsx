@@ -136,19 +136,11 @@ function App() {
   setEditingMovie(null);
 };
 
-  function filterWatched(movie: {
-    name: string;
-    year: number;
-    summary: string;
-    isWatched: boolean;}) {
+  function filterWatched(movie: Movie) {
     return movie.isWatched === true;
   }
 
-  function filterunWatched(movie: {
-    name: string;
-    year: number;
-    summary: string;
-    isWatched: boolean;}) {
+  function filterunWatched(movie: Movie) {
     return movie.isWatched === false;
   }
 
@@ -194,11 +186,12 @@ function App() {
         value = {searchTerm}
         onChange = {(e) => setSearchTerm(e.target.value)}>       
         </input>
+        {searchTerm && 
         <button className = "clear-search"
           id="clearSearch"
           onClick = {() => setSearchTerm("")}>
           ✕ Clear Search
-          </button>
+          </button>}
         <br />
 
         <button onClick={() => setFilter("all")}>
@@ -270,6 +263,7 @@ function App() {
             {searchedWatchedMovies.length === 0 && <p>No movies found.</p>}
             {searchedWatchedMovies.map((movie) => (
               <FilmCard
+                key={movie.name}
                 movie={movie}
                 onToggleWatched={toggleWatched}
                 deleteMovie={deleteMovie}

@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "testexam.tsx"]
+  "include": ["src", "ts-playground/playground.js"]
 }

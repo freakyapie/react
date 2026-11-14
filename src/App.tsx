@@ -50,12 +50,20 @@ function App() {
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem("token")
-  });
-  const [expiresAt, setExpiresAt] = useState<number | null>(()=> {
-    const savedExpiry = localStorage.getItem("expiresAt");
+  const savedToken = localStorage.getItem("token");
+  const savedExpiry = Number(localStorage.getItem("expiresAt"));
 
-    return savedExpiry ? Number(savedExpiry) : null;
+  if (savedToken && savedExpiry > Date.now()) {
+    return savedToken;
+  }
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("expiresAt");
+  return null;
+  });
+  const [expiresAt, setExpiresAt] = useState<number | null>(() => {
+  const savedExpiry = localStorage.getItem("expiresAt");
+  return savedExpiry ? Number(savedExpiry) : null;
   });
 
   useEffect(() => {
@@ -160,6 +168,22 @@ function App() {
     }
   };
 
+ useEffect(() => {
+  if (!token || !expiresAt) return;
+
+  const remainingTime = expiresAt - Date.now();
+
+  const timeoutId = setTimeout(() => {
+    setToken(null);
+    setExpiresAt(null);
+    setMoviesArray([]);
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("expiresAt");
+  }, Math.max(remainingTime, 0));
+
+    return () => clearTimeout(timeoutId);
+  }, [token, expiresAt]);
 
   async function addMovie(newMovie: CreateMovie): Promise<boolean> {
     try {

@@ -52,6 +52,11 @@ function App() {
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem("token")
   });
+  const [expiresAt, setExpiresAt] = useState<number | null>(()=> {
+    const savedExpiry = localStorage.getItem("expiresAt");
+
+    return savedExpiry ? Number(savedExpiry) : null;
+  });
 
   useEffect(() => {
     if (!token) return;
@@ -124,6 +129,7 @@ function App() {
         setToken(tokenData.access_token);
         localStorage.setItem("token",(tokenData.access_token));
         localStorage.setItem("expiresAt", expiresAt.toString());
+        setExpiresAt(expiresAt);
 
         return true;
     } catch (err) {

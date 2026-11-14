@@ -11,6 +11,7 @@ import Search from "./components/Search.tsx";
 
 
 export interface Movie {
+  id: number;
   name: string;
   year: number;
   summary: string;
@@ -18,41 +19,9 @@ export interface Movie {
 };
 
 function App() {
-  const initialMovies: Movie[] = [
-  {
-    name: "Fargo",
-    year: 1996,
-    summary: "An artwork of suspense",
-    isWatched: true
-  },
-  {
-    name: "The Hateful Eight",
-    year: 2015,
-    summary: "A group of strangers trapped in a cabin",
-    isWatched: true
-  },
-  {
-    name: "Organize İşler",
-    year: 2004,
-    summary: "A comedy about a small-time con artist",
-    isWatched: false
-  }
-  ];
-
-  const [moviesArray, setMoviesArray] = useState<Movie[]>(() => {
-    const savedMovies = localStorage.getItem("movies");
-
-    if (savedMovies) {
-      return JSON.parse(savedMovies);
-    } else {
-      return initialMovies;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("movies", JSON.stringify(moviesArray));
-  }, [moviesArray]);
-
+  const [moviesArray, setMoviesArray] = useState<Movie[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [movieName, setMovieName] = useState("");
   const [movieYear, setMovieYear] = useState<number | "">("");
   const [movieSummary, setMovieSummary] = useState("");
@@ -61,6 +30,43 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
+
+  useEffect(() => {
+    async function fetchMovies() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("http://localhost:8000/api/movies");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch movies");
+        }
+
+        const data: Movie[] = await response.json();
+
+        setMoviesArray(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchMovies();
+  }, []);
+
+
+  async function loadData() {
+    try {
+      console.log("Loading data")
+      throw new Error("Test error");
+    } catch {
+      console.log("Something went wrong")
+    } finally {
+      console.log("Finished")
+    }
+  };
 
 
   function addNewMovie() {
@@ -205,11 +211,15 @@ function App() {
         <button onClick={() => setFilter("Unwatched")}>
           Unwatched
           </button>
-
-        {searchedMovies.length === 0 && <p>No movies found.</p>}
-          {searchedMovies.map((movie) => (
+        
+        {!isLoading && error === null && moviesArray.length === 0 && <p>No movies found.</p>}
+        {error && <p>Error: {error}</p>}
+        {isLoading && <p>Loading movies...</p>}
+          {!isLoading && !error && moviesArray.length !== 0 &&
+          searchedMovies.map((movie) => (
             <FilmCard
-              movie ={movie}
+              key={movie.id}
+              movie={movie}
               onToggleWatched={toggleWatched}
               deleteMovie={deleteMovie}
               editMovie={editMovie}

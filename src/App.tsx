@@ -78,7 +78,6 @@ function App() {
         setIsLoading(false);
       }
     }
-
     fetchMovies();
   }, [token]);
 
@@ -128,6 +127,27 @@ function App() {
     }
   };
 
+  async function logout() {
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/logout", {
+        method: "POST",
+        headers: {
+           "Authorization": "Bearer " + token,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to logout")
+      }
+      
+      setToken(null)
+      setMoviesArray([]);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.")
+    }
+  };
+
 
   async function addMovie(newMovie: CreateMovie): Promise<boolean> {
     try {
@@ -135,6 +155,7 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
         },
         body: JSON.stringify(newMovie),
       });

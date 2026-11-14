@@ -49,7 +49,9 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem("token")
+  });
 
   useEffect(() => {
     if (!token) return;
@@ -117,8 +119,11 @@ function App() {
           throw new Error("Failed to login");
         }
         const tokenData: TokenResponse = await response.json();
+        const expiresAt = Date.now() + tokenData.expires_in * 1000;
 
         setToken(tokenData.access_token);
+        localStorage.setItem("token",(tokenData.access_token));
+        localStorage.setItem("expiresAt", expiresAt.toString());
 
         return true;
     } catch (err) {
@@ -142,6 +147,7 @@ function App() {
       
       setToken(null)
       setMoviesArray([]);
+      localStorage.removeItem("token");
 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.")

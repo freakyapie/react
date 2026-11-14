@@ -18,6 +18,25 @@ export interface Movie {
   isWatched: boolean;
 };
 
+export type CreateMovie = Omit<Movie, "id">;
+
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+interface User {
+  id: number;
+  username: string;
+  isOnline: boolean;
+}
+
 function App() {
   const [moviesArray, setMoviesArray] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,14 +49,21 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingMovie, setEditingMovie] = useState<Movie | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!token) return;
+
     async function fetchMovies() {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await fetch("http://localhost:8000/api/movies");
+        const response = await fetch("http://localhost:8000/api/movies", {
+          headers: {
+            "Authorization": "Bearer " + token,
+          },
+        });
 
         if (!response.ok) {
           throw new Error("Failed to fetch movies");
@@ -54,56 +80,117 @@ function App() {
     }
 
     fetchMovies();
-  }, []);
+  }, [token]);
 
-
-  async function loadData() {
+  async function register(credentials: LoginCredentials): Promise<boolean> {
     try {
-      console.log("Loading data")
-      throw new Error("Test error");
-    } catch {
-      console.log("Something went wrong")
-    } finally {
-      console.log("Finished")
+      const response = await fetch("http://localhost:8000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to register");
+      }
+      const createdUser: User = await response.json();
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong.");
+      return false;
+    }
+  };
+
+  async function login(credentials: LoginCredentials): Promise<boolean> {
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to login");
+        }
+        const tokenData: TokenResponse = await response.json();
+
+        setToken(tokenData.access_token);
+
+        return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      return false;
     }
   };
 
 
-  function addNewMovie() {
-  if (!movieName.trim()) {
-    return;
-  }
+  async function addMovie(newMovie: CreateMovie): Promise<boolean> {
+    try {
+      const response = await fetch("http://localhost:8000/api/movies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newMovie),
+      });
 
-  if (editingMovie !== null) {
-    setShowEditWarning(true);
-    return;
-  }
+      if (!response.ok) {
+        throw new Error("Failed to add movie");
+      }
 
-  for (const movie of moviesArray) {
-    if (
-      movie.name.toLowerCase() === movieName.toLowerCase() &&
-      movie.year === Number(movieYear)
-    ) {
+      const createdMovie: Movie = await response.json();
+
+      setMoviesArray((prevMovies) => [...prevMovies, createdMovie]);
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      return false;
+    }
+  };
+
+  async function addNewMovie() {
+    if (!movieName.trim()) {
       return;
     }
-  }
 
-  setMoviesArray([
-    ...moviesArray,
-    {
+    if (editingMovie !== null) {
+      setShowEditWarning(true);
+      return;
+    }
+
+    for (const movie of moviesArray) {
+      if (
+        movie.name.toLowerCase() === movieName.toLowerCase() &&
+        movie.year === Number(movieYear)
+      ) {
+        return;
+      }
+    }
+
+    const newMovie: CreateMovie = {
       name: movieName,
       year: Number(movieYear),
       summary: movieSummary,
       isWatched: checkboxChecked,
-    },
-  ]);
+    };
 
-  setMovieName("");
-  setMovieYear("");
-  setMovieSummary("");
-  setCheckboxChecked(false);
+    const success = await addMovie(newMovie);
+
+    if (success) {
+      setMovieName("");
+      setMovieYear("");
+      setMovieSummary("");
+      setCheckboxChecked(false);
+    }
   }
 
+  
   function deleteMovie(movieName: string) {
     setMoviesArray(
       moviesArray.filter((movie) => {

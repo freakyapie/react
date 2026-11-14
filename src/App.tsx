@@ -69,7 +69,8 @@ function App() {
   // ====================
   // USE EFFECTS
   // ====================
-  
+
+  //GET MOVIES & FETCHES/UPDATES MOVIES
   useEffect(() => {
     if (!token) return;
 
@@ -100,6 +101,7 @@ function App() {
     fetchMovies();
   }, [token]);
 
+  // TOKEN EXPIRY MANAGEMENT
    useEffect(() => {
     if (!token || !expiresAt) return;
 
@@ -226,6 +228,7 @@ function App() {
     }
   };
 
+  // MOVIE INPUT CHECK
   async function addNewMovie() {
     if (!movieName.trim()) {
       return;
@@ -277,16 +280,15 @@ function App() {
       }
 
       setMoviesArray((prevMovies) =>
-        prevMovies.filter((movie) => {
-            movie.id !== movieId
-          }
-        )
-      );
+        prevMovies.filter((movie) => movie.id !== movieId)
+        );
+
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       return false;
     }
+  };
   
   // PUT - Update movie
   function editMovie(movie: Movie) {

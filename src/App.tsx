@@ -66,6 +66,10 @@ function App() {
   return savedExpiry ? Number(savedExpiry) : null;
   });
 
+  // ====================
+  // USE EFFECTS
+  // ====================
+  
   useEffect(() => {
     if (!token) return;
 
@@ -95,6 +99,27 @@ function App() {
     }
     fetchMovies();
   }, [token]);
+
+   useEffect(() => {
+    if (!token || !expiresAt) return;
+
+    const remainingTime = expiresAt - Date.now();
+
+    const timeoutId = setTimeout(() => {
+      setToken(null);
+      setExpiresAt(null);
+      setMoviesArray([]);
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("expiresAt");
+    }, Math.max(remainingTime, 0));
+
+      return () => clearTimeout(timeoutId);
+    }, [token, expiresAt]);
+
+  // ====================
+  // AUTHENTICATION
+  // ====================
 
   async function register(credentials: LoginCredentials): Promise<boolean> {
     try {
@@ -168,23 +193,13 @@ function App() {
     }
   };
 
- useEffect(() => {
-  if (!token || !expiresAt) return;
+  // ====================
+  // MOVIE API
+  // ====================
 
-  const remainingTime = expiresAt - Date.now();
-
-  const timeoutId = setTimeout(() => {
-    setToken(null);
-    setExpiresAt(null);
-    setMoviesArray([]);
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("expiresAt");
-  }, Math.max(remainingTime, 0));
-
-    return () => clearTimeout(timeoutId);
-  }, [token, expiresAt]);
-
+  // GET - Fetch all movies
+  
+  // POST - Add movie
   async function addMovie(newMovie: CreateMovie): Promise<boolean> {
     try {
       const response = await fetch("http://localhost:8000/api/movies", {
@@ -247,44 +262,120 @@ function App() {
     }
   }
 
-  
-  function deleteMovie(movieName: string) {
-    setMoviesArray(
-      moviesArray.filter((movie) => {
-        return (
-          movie.name !== movieName
-        )
-      }
-    )
-  )};
+  // DELETE - Delete movie
+  async function deleteMovie(movieId: number): Promise<boolean> {
+    try {
+      const response = await fetch(`http://localhost:8000/api/movies/${movieId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": "Bearer " + token
+        },
+      });
 
+      if (!response.ok) {
+        throw new Error("Failed to delete movie");
+      }
+
+      setMoviesArray((prevMovies) =>
+        prevMovies.filter((movie) => {
+            movie.id !== movieId
+          }
+        )
+      );
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      return false;
+    }
+  
+  // PUT - Update movie
   function editMovie(movie: Movie) {
-      setEditingMovie(movie);
-      setMovieName(movie.name);
-      setMovieYear(movie.year);
-      setMovieSummary(movie.summary);
-      setCheckboxChecked(movie.isWatched)
+    setEditingMovie(movie);
+    setMovieName(movie.name);
+    setMovieYear(movie.year);
+    setMovieSummary(movie.summary);
+    setCheckboxChecked(movie.isWatched)
   };
 
-  function saveMovie() {
-  setMoviesArray(
-    moviesArray.map((movie) => {
-      if (movie.name === editingMovie?.name) {
-        return {
-          ...movie,
-          name: movieName,
-          year: Number(movieYear),
-          summary: movieSummary,
-          isWatched: checkboxChecked,
-        };
+  async function saveMovie(movieId: number): Promise<boolean> {
+    try {
+      const updatedMovie = {
+      name: movieName,
+      year: Number(movieYear),
+      summary: movieSummary,
+      isWatched: checkboxChecked,
+    };
+      const response = await fetch(`http://localhost:8000/api/movies/${movieId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(updatedMovie)
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save movie");
       }
 
-      return movie;
-    })
-  );
+      setMoviesArray((prevMovies) =>
+        prevMovies.map((movie) => {
+          if (movie.id === editingMovie?.id) {
+            return {
+              ...movie,
+              name: movieName,
+              year: Number(movieYear),
+              summary: movieSummary,
+              isWatched: checkboxChecked,
+            };
+          } else {
+            return movie;
+          }
+        })
+      );
 
-  setEditingMovie(null);
-};
+      setEditingMovie(null);
+
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      return false;
+    }
+  };
+
+  // PATCH - Toggle watched
+  async function toggleWatched(movieId: number): Promise<boolean> {
+    try {
+      const response = await fetch(`http://localhost:8000/api/movies/${movieId}/watched`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": "Bearer " + token,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update watched status");
+      }
+
+      setMoviesArray((prevMovies) => 
+      prevMovies.map((movie) => {
+        if (movie.id === movieId) {
+          return {
+            ...movie,
+            isWatched: !movie.isWatched
+          };
+        }
+
+        return movie;
+      })
+    );
+
+    return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong");
+      return false;
+    }
+  };
 
   function filterWatched(movie: Movie) {
     return movie.isWatched === true;
@@ -468,19 +559,5 @@ function App() {
   </>
 );
 
-  function toggleWatched(movieName: string) {
-  setMoviesArray(
-    moviesArray.map((movie) => {
-      if (movie.name === movieName) {
-        return {
-          ...movie,
-          isWatched: !movie.isWatched
-        };
-      }
-
-      return movie;
-    })
-  );
-}
 }
 export default App

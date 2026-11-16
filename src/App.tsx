@@ -199,7 +199,27 @@ function App() {
   // MOVIE API
   // ====================
 
-  // GET - Fetch all movies
+  // GET - A MOVIE BY ID
+
+  async function getMovie(movieId: number): Promise<Movie | null> {
+    try {
+      const response = await fetch(`http://localhost:8000/api/movies/${movieId}` {
+        headers: {
+          "Authorization": "Bearer " + token,
+        }
+      })
+      
+      if (!response.ok) {
+          throw new Error("Failed to show the movie");
+      };
+
+      const movie: Movie = await response.json();
+      return movie;
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong.")
+    } return null;
+  }
   
   // POST - Add movie
   async function addMovie(newMovie: CreateMovie): Promise<boolean> {
@@ -228,7 +248,7 @@ function App() {
     }
   };
 
-  // MOVIE INPUT CHECK
+  // MOVIE INPUT CHECK WHEN ADDED
   async function addNewMovie() {
     if (!movieName.trim()) {
       return;

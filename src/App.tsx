@@ -94,6 +94,24 @@ function App() {
     } return null;
   };
 
+
+
+  async function getPublicMovies(): Promise<PublicMovie[] | null> {
+    try {
+      const response = await fetch("http://localhost:8000/api/public/movies");
+
+      if (!response.ok) {
+        throw new Error("Failed to show movies")
+      };
+
+      const publicMovies: PublicMovie[] = await response.json();
+
+      return publicMovies;
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong")
+    } return null;
+  };
+
   // ====================
   // USE EFFECTS
   // ====================
@@ -221,6 +239,51 @@ function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.")
     }
+  };
+
+    // ====================
+    // USER
+    // ====================
+
+  async function selfUser(): Promise<User | null> {
+    try {
+      const response = await fetch("http://localhost:8000/api/users/me", {
+        headers: {
+          "Authorization": "Bearer " + token,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user.")
+      };
+
+      const user: User = await response.json();
+
+      return user;
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong");
+    } return null;
+  };
+
+  async function userStatus(isOnline: boolean):Promise<User | null> {
+    try {
+      const response = await fetch("http://localhost:8000/api/users/me/status", {
+        headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user status.")
+      };
+
+      const user: User = await response.json()
+
+      return user;
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong");
+    } return null;
   };
 
   // ====================

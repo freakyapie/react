@@ -10,6 +10,17 @@ import Navbar from "./components/Navbar.tsx";
 import Search from "./components/Search.tsx";
 
 
+interface HealthResponse {
+  status: string;
+};
+
+interface PublicMovie {
+  name: string;
+  year: number;
+  summary: string;
+};
+
+
 export interface Movie {
   id: number;
   name: string;
@@ -66,10 +77,27 @@ function App() {
   return savedExpiry ? Number(savedExpiry) : null;
   });
 
+  //PUBLIC API
+  async function getHealthResponse(): Promise< HealthResponse | null> {
+    try {
+      const response = await fetch("http://localhost:8000/health");
+
+      if (!response.ok) {
+        throw new Error("Status: Maintenance")
+      };
+
+      const status: HealthResponse = await response.json();
+
+      return status;
+    } catch (err) {
+      setError(err instanceof Error ? err.message: "Something went wrong")
+    } return null;
+  };
+
   // ====================
   // USE EFFECTS
   // ====================
-
+  
   //GET MOVIES & FETCHES/UPDATES MOVIES
   useEffect(() => {
     if (!token) return;

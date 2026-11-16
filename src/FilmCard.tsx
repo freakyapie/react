@@ -3,8 +3,8 @@ import type { Movie } from "./App.tsx"
 
 type FilmCardProps = {
     movie: Movie;
-    onToggleWatched(movieName: string): void;
-    deleteMovie(movieName: string): void;
+    onToggleWatched(movieId: number): void;
+    deleteMovie(movieId: number): void;
     editMovie(movie: Movie): void;
 };
 
@@ -16,10 +16,10 @@ export function FilmCard ({movie, onToggleWatched, deleteMovie, editMovie
         <h4>Year: {movie.year}</h4>
         <h5>Summary: {movie.summary}</h5>
         <p>{movie.isWatched ? "This has been watched" : "This hasn't been watched yet"}</ p>
-        <button onClick = {() => onToggleWatched(movie.name)}>
+        <button onClick = {() => onToggleWatched(movie.id)}>
             {movie.isWatched ? "Mark as unwatched" : "Mark as watched"}
         </button>
-        <button onClick = {() => deleteMovie(movie.name)}>
+        <button onClick = {() => deleteMovie(movie.id)}>
             Delete
         </button>
         <button onClick = {() => editMovie(movie)}>

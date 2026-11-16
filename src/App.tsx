@@ -268,10 +268,12 @@ function App() {
   async function userStatus(isOnline: boolean):Promise<User | null> {
     try {
       const response = await fetch("http://localhost:8000/api/users/me/status", {
+        method: "PATCH",
         headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + token,
-        }
+        },
+        body: JSON.stringify({isOnline}),
       });
 
       if (!response.ok) {
@@ -596,7 +598,7 @@ function App() {
           onChange = {(e) => setCheckboxChecked(e.target.checked)}
       />
       {editingMovie !== null && (
-      <button onClick={saveMovie}>
+      <button onClick={() => saveMovie(editingMovie!.id)}>
         Save
       </button>
       )}

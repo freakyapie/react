@@ -1,0 +1,31 @@
+PRAGMA foreign_keys = ON;
+CREATE TABLE IF NOT EXISTS users (
+ id INTEGER PRIMARY KEY,
+ username TEXT NOT NULL UNIQUE,
+ password_hash TEXT NOT NULL,
+ is_online INTEGER NOT NULL DEFAULT 1 CHECK(is_online IN (0,1))
+);
+CREATE TABLE IF NOT EXISTS sessions (
+ jti TEXT PRIMARY KEY,
+ user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ expires_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS movies (
+ id INTEGER PRIMARY KEY,
+ user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ name TEXT NOT NULL,
+ name_key TEXT NOT NULL,
+ year INTEGER NOT NULL,
+ summary TEXT NOT NULL DEFAULT '',
+ is_watched INTEGER NOT NULL DEFAULT 0 CHECK(is_watched IN (0,1)),
+ UNIQUE(user_id, name_key, year)
+);
+CREATE TABLE IF NOT EXISTS books (
+ id INTEGER PRIMARY KEY,
+ user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ title TEXT NOT NULL,
+ author TEXT NOT NULL,
+ is_read INTEGER NOT NULL DEFAULT 0 CHECK(is_read IN (0,1))
+);
+CREATE INDEX IF NOT EXISTS ix_books_user ON books(user_id);
+CREATE INDEX IF NOT EXISTS ix_sessions_expiry ON sessions(expires_at);
